@@ -3,9 +3,9 @@ import { chromium, test, expect } from '@playwright/test';
 import { createEvents } from 'ics';
 
 const offset = 0 // - new Date().getTimezoneOffset() * 60 * 1000
-test('aaaaa', async ({ }) => {
+test('write calendar ics', async ({ }) => {
 	// from https://stackoverflow.com/a/78265981
-	const userDataDir = `/home/seppo/.config/google-chrome-for-api/`
+	const userDataDir = `${process.env.HOME}/.config/google-chrome-for-api/`
 	const context = await chromium.launchPersistentContext(userDataDir, { channel: "chrome", headless: true });
 
 	const page = await context.newPage();
