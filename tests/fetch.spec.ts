@@ -53,7 +53,7 @@ test('write calendar ics', async ({ }) => {
 		const DBOpenRequest = window.indexedDB.open("sofascoreIndexDB");
 
 		DBOpenRequest.onerror = (event) => {
-			reject(JSON.stringify(event))
+			reject(event)
 		};
 
 		DBOpenRequest.onsuccess = (event) => {
@@ -62,7 +62,7 @@ test('write calendar ics', async ({ }) => {
 			const objectStore = transaction.objectStore("keyvaluepairs");
 			const request = objectStore.getAll();
 			request.onerror = (event) => {
-				reject(JSON.stringify(event));
+				reject(event);
 			};
 			request.onsuccess = (event) => {
 				resolve(event.target.result[0]);
