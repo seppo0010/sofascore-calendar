@@ -23,7 +23,7 @@ test('write calendar ics', async ({ }) => {
 	const addStage = (stage) => {
 		if (!stage) return
 		events[stage.id] = {
-			title: `${stage.uniqueStage.name} (${stage.description})`,
+			title: `${stage.uniqueStage.name} (${stage.circuit}, ${stage.description})`,
 			start: (stage.startDateTimestamp * 1000) + offset,
 			end: ((stage.endDateTimestamp || (stage.startDateTimestamp + 2 * 60 * 60)) * 1000) + offset,
 			startInputType: 'utc',
