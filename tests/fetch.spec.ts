@@ -5,6 +5,7 @@ import { createEvents } from 'ics';
 const { teams, tournaments, stage, sports } = process.env.SPECIAL_EVENTS === undefined ? {
 	teams: {}, tournaments: {}, stage: {}, sports: {},
 } : JSON.parse(process.env.SPECIAL_EVENTS);
+const specialStage = stage;
 const offset = 0 // - new Date().getTimezoneOffset() * 60 * 1000
 test('write calendar ics', async ({ }) => {
 	// from https://stackoverflow.com/a/78265981
@@ -32,7 +33,7 @@ test('write calendar ics', async ({ }) => {
 		if (!stage) return
 		let prefix = '';
 		if (sports[stage.uniqueStage.category.name]) prefix += sports[stage.uniqueStage.category.name]
-		if (stage[stage.description]) prefix += stage[stage.description]
+		if (specialStage[stage.description]) prefix += specialStage[stage.description]
 		events[stage.id] = {
 			title: `${prefix} ${stage.uniqueStage.name} (${stage.info.circuit}, ${stage.description})`,
 			start: (stage.startDateTimestamp * 1000) + offset,
