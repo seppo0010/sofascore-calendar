@@ -11,6 +11,7 @@
     "@types/node": "^24.1.0"
   },
   "dependencies": {
+    "dotenv": "^17.2.1",
     "ics": "^3.8.1"
   }
 }
