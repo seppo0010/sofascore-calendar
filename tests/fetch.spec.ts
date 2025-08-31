@@ -16,9 +16,14 @@ test('write calendar ics', async ({ }) => {
 	const events = {}
 	const addEvent = (event) => {
 		if (!event) return
+		if (event.status && event.status.type === 'postponed') return;
 		let prefix = '';
 		if (sports[event.tournament.category.sport.name]) prefix += sports[event.tournament.category.sport.name]
-		if (tournaments[event.tournament.name]) prefix += tournaments[event.tournament.name]
+		for (const [k, v] of Object.entries(tournaments)) {
+			if ((k[0] === '/' && event.tournament.name.match(new RegExp(k.substring(1, k.length-1)))) || k === event.tournament.name) {
+				prefix += v;
+			}
+		}
 		if (teams[event.homeTeam.name]) prefix += teams[event.homeTeam.name]
 		if (teams[event.awayTeam.name]) prefix += teams[event.awayTeam.name]
 		events[event.id] = {
@@ -31,6 +36,7 @@ test('write calendar ics', async ({ }) => {
 	}
 	const addStage = (stage) => {
 		if (!stage) return
+		if (stage.status && stage.status.type === 'postponed') return;
 		let prefix = '';
 		if (sports[stage.uniqueStage.category.name]) prefix += sports[stage.uniqueStage.category.name]
 		if (specialStage[stage.description]) prefix += specialStage[stage.description]
