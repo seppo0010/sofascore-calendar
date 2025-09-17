@@ -2,8 +2,8 @@ import { writeFileSync } from 'fs';
 import { chromium, test, expect } from '@playwright/test';
 import { createEvents } from 'ics';
 
-const { teams, tournaments, stage, sports } = process.env.SPECIAL_EVENTS === undefined ? {
-	teams: {}, tournaments: {}, stage: {}, sports: {},
+const { teams, tournaments, stage, sports, teamSuffixes } = process.env.SPECIAL_EVENTS === undefined ? {
+	teams: {}, tournaments: {}, stage: {}, sports: {}, teamSuffixes: {},
 } : JSON.parse(process.env.SPECIAL_EVENTS);
 const specialStage = stage;
 const offset = 0 // - new Date().getTimezoneOffset() * 60 * 1000
@@ -31,8 +31,10 @@ test('write calendar ics', async ({ }) => {
 		}
 		if (teams[event.homeTeam.name]) prefix += teams[event.homeTeam.name]
 		if (teams[event.awayTeam.name]) prefix += teams[event.awayTeam.name]
+		const t1Suffix = teamSuffixes[event.homeTeam.name] ? ` ${teamSuffixes[event.homeTeam.name]}` : ''
+		const t2Suffix = teamSuffixes[event.awayTeam.name] ? ` ${teamSuffixes[event.awayTeam.name]}` : ''
 		events[event.id] = {
-			title: `${prefix} ${event.homeTeam.name} - ${event.awayTeam.name} (${event.tournament.name}, ${sport(event.tournament.category.sport.name)})`,
+			title: `${prefix} ${event.homeTeam.name}${t1Suffix} - ${event.awayTeam.name}${t2Suffix} (${event.tournament.name}, ${sport(event.tournament.category.sport.name)})`.trim(),
 			start: (event.startTimestamp * 1000) + offset,
 			end: ((event.endTimestamp || (event.startTimestamp + 2 * 60 * 60)) * 1000) + offset,
 			startInputType: 'utc',
@@ -46,7 +48,7 @@ test('write calendar ics', async ({ }) => {
 		if (sports[stage.uniqueStage.category.name]) prefix += sports[stage.uniqueStage.category.name]
 		if (specialStage[stage.description]) prefix += specialStage[stage.description]
 		events[stage.id] = {
-			title: `${prefix} ${stage.uniqueStage.name} (${stage.info.circuit}, ${stage.description})`,
+			title: `${prefix} ${stage.uniqueStage.name} (${stage.info.circuit}, ${stage.description})`.trim(),
 			start: (stage.startDateTimestamp * 1000) + offset,
 			end: ((stage.endDateTimestamp || (stage.startDateTimestamp + 2 * 60 * 60)) * 1000) + offset,
 			startInputType: 'utc',
