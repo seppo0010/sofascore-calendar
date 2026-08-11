@@ -67,7 +67,7 @@ test('write calendar ics', async ({ }) => {
 			addStage(d.stage)
 		}
 	});
-	await page.goto('https://www.sofascore.com/favorites');
+	await page.goto('https://www.sofascore.com/favorites', { waitUntil: 'domcontentloaded', timeout: 30000 });
 	await expect(page.getByRole('main')).toContainText('Finished');
 	for (let x = 0; x < 20; x++) {
 		await page.evaluate(() => window.scrollBy(0, 230));
