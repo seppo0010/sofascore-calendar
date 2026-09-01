@@ -1,6 +1,7 @@
 import { writeFileSync } from 'fs';
 import { chromium, test, expect } from '@playwright/test';
 import { createEvents } from 'ics';
+import { fetchNflWatchabilityMap, computeWatchability } from './nfl-fpi';
 
 const { teams, tournaments, stage, sports, teamSuffixes } = process.env.SPECIAL_EVENTS === undefined ? {
 	teams: {}, tournaments: {}, stage: {}, sports: {}, teamSuffixes: {},
@@ -18,6 +19,7 @@ test('write calendar ics', async ({ }) => {
 	const context = await chromium.launchPersistentContext(userDataDir, { channel: "chrome", headless: true });
 
 	const page = await context.newPage();
+	const nflMap = await fetchNflWatchabilityMap(context);
 	const events = {}
 	const addEvent = (event) => {
 		if (!event) return
@@ -33,8 +35,23 @@ test('write calendar ics', async ({ }) => {
 		if (teams[event.awayTeam.name]) prefix += teams[event.awayTeam.name]
 		const t1Suffix = teamSuffixes[event.homeTeam.name] ? ` ${teamSuffixes[event.homeTeam.name]}` : ''
 		const t2Suffix = teamSuffixes[event.awayTeam.name] ? ` ${teamSuffixes[event.awayTeam.name]}` : ''
+		let description: string | undefined
+		if (event.tournament.category.sport.name === 'American football') {
+			const home = nflMap[event.homeTeam.name]
+			const away = nflMap[event.awayTeam.name]
+			if (home && away) {
+				const w = computeWatchability(home, away)
+				prefix += '⭐'.repeat(Math.round(w.score / 20))
+				description = [
+					`Watchability: ${w.score}/100`,
+					`FPI: ${event.homeTeam.name} ${home.fpi} vs ${event.awayTeam.name} ${away.fpi}`,
+					`Playoff%: ${home.playoffPct ?? '?'}% vs ${away.playoffPct ?? '?'}%`,
+				].join('\n')
+			}
+		}
 		events[event.id] = {
 			title: `${prefix} ${event.homeTeam.name}${t1Suffix} - ${event.awayTeam.name}${t2Suffix} (${event.tournament.name}, ${sport(event.tournament.category.sport.name)})`.trim(),
+			description,
 			start: (event.startTimestamp * 1000) + offset,
 			end: ((event.endTimestamp || (event.startTimestamp + 2 * 60 * 60)) * 1000) + offset,
 			startInputType: 'utc',
