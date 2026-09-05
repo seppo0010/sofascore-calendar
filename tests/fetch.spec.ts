@@ -114,6 +114,36 @@ test('write calendar ics', async ({ }) => {
 	Object.values(JSON.parse(dbData.events)).forEach(addEvent);
 	Object.values(JSON.parse(dbData.stages)).forEach(addStage);
 
+	// SofaScore's own client frequently fails to sync followed "unique stage"
+	// categories (e.g. Formula 1) into races/sessions, even though the follow
+	// itself is recorded (dbData.lists.uniqueStages). Fetch each followed
+	// series' current-season schedule directly so those events aren't lost.
+	const lists = typeof dbData.lists === 'string' ? JSON.parse(dbData.lists) : dbData.lists;
+	const mutedStages = new Set<number>(lists.mutedStages || []);
+	const fetchJson = (url: string) => page.evaluate(async (u) => {
+		const res = await fetch(u);
+		return res.ok ? res.json() : null;
+	}, url);
+	for (const uniqueStageId of (lists.uniqueStages || []) as number[]) {
+		try {
+			const seasonsRes = await fetchJson(`https://www.sofascore.com/api/v1/unique-stage/${uniqueStageId}/seasons`);
+			const seasons = seasonsRes?.seasons || [];
+			const nowSec = Date.now() / 1000;
+			const currentSeason = [...seasons].sort((a, b) => b.startDateTimestamp - a.startDateTimestamp).find((s) => s.startDateTimestamp <= nowSec) || seasons[0];
+			if (!currentSeason) continue;
+			const roundsRes = await fetchJson(`https://www.sofascore.com/api/v1/stage/${currentSeason.id}/substages`);
+			const rounds = (roundsRes?.stages || []).filter((r: any) => !mutedStages.has(r.id) && !(r.status && r.status.type === 'canceled'));
+			const roundsSessions = await Promise.all(rounds.map((r: any) => fetchJson(`https://www.sofascore.com/api/v1/stage/${r.id}/substages`)));
+			for (const sessionsRes of roundsSessions) {
+				for (const session of (sessionsRes?.stages || [])) {
+					if (!mutedStages.has(session.id)) addStage(session);
+				}
+			}
+		} catch (e) {
+			console.error('Failed to fetch schedule for uniqueStage', uniqueStageId, e);
+		}
+	}
+
 	await page.waitForTimeout(1000);
 	await context.close();
 
