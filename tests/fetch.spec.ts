@@ -49,11 +49,13 @@ test('write calendar ics', async ({ }) => {
 				].join('\n')
 			}
 		}
+		const isNfl = event.tournament.category.sport.name === 'American football'
+		const defaultDurationSeconds = (isNfl ? 3.5 : 2) * 60 * 60
 		events[event.id] = {
 			title: `${prefix} ${event.homeTeam.name}${t1Suffix} - ${event.awayTeam.name}${t2Suffix} (${event.tournament.name}, ${sport(event.tournament.category.sport.name)})`.trim(),
 			description,
 			start: (event.startTimestamp * 1000) + offset,
-			end: ((event.endTimestamp || (event.startTimestamp + 2 * 60 * 60)) * 1000) + offset,
+			end: ((event.endTimestamp || (event.startTimestamp + defaultDurationSeconds)) * 1000) + offset,
 			startInputType: 'utc',
 			endInputType: 'utc',
 		};
