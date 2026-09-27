@@ -14,6 +14,11 @@ Run with headed browser (for debugging):
 npx playwright test --headed
 ```
 
+Type-check (no browser, no side effects):
+```bash
+npm run typecheck
+```
+
 View the HTML test report after a run:
 ```bash
 npx playwright show-report

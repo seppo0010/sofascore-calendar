@@ -111,7 +111,7 @@ test('write calendar ics', async ({ }) => {
 				reject(event);
 			};
 			request.onsuccess = (event) => {
-				resolve(event.target.result[0]);
+				resolve(request.result[0]);
 			};
 		};
 	})))
@@ -154,7 +154,7 @@ test('write calendar ics', async ({ }) => {
 	const { error, value } = createEvents(Object.values(events));
 	if (error) {
 		console.error({ error })
-		throw new Error(error)
+		throw error
 	}
 	writeFileSync(`/opt/calendar/calendar.ics`, value)
 });
