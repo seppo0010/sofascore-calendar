@@ -36,12 +36,14 @@ test('write calendar ics', async ({ }) => {
 		const t1Suffix = teamSuffixes[event.homeTeam.name] ? ` ${teamSuffixes[event.homeTeam.name]}` : ''
 		const t2Suffix = teamSuffixes[event.awayTeam.name] ? ` ${teamSuffixes[event.awayTeam.name]}` : ''
 		let description: string | undefined
+		let watchabilitySuffix = ''
 		if (event.tournament.category.sport.name === 'American football') {
 			const home = nflMap[event.homeTeam.name]
 			const away = nflMap[event.awayTeam.name]
 			if (home && away) {
 				const w = computeWatchability(home, away)
 				prefix += '⭐'.repeat(Math.round(w.score / 20))
+				watchabilitySuffix = `, Watchability: ${w.score}/100`
 				description = [
 					`Watchability: ${w.score}/100`,
 					`FPI: ${event.homeTeam.name} ${home.fpi} vs ${event.awayTeam.name} ${away.fpi}`,
@@ -52,7 +54,7 @@ test('write calendar ics', async ({ }) => {
 		const isNfl = event.tournament.category.sport.name === 'American football'
 		const defaultDurationSeconds = (isNfl ? 3.5 : 2) * 60 * 60
 		events[event.id] = {
-			title: `${prefix} ${event.homeTeam.name}${t1Suffix} - ${event.awayTeam.name}${t2Suffix} (${event.tournament.name}, ${sport(event.tournament.category.sport.name)})`.trim(),
+			title: `${prefix} ${event.homeTeam.name}${t1Suffix} - ${event.awayTeam.name}${t2Suffix} (${event.tournament.name}, ${sport(event.tournament.category.sport.name)}${watchabilitySuffix})`.trim(),
 			description,
 			start: (event.startTimestamp * 1000) + offset,
 			end: ((event.endTimestamp || (event.startTimestamp + defaultDurationSeconds)) * 1000) + offset,
