@@ -23,12 +23,14 @@ Builds a `.ics` calendar from public JSON APIs — no browser, no login. (It use
 
 **`src/calendar.ts`**
 - **Soccer / NFL / NBA:** ESPN's unofficial API (`site.api.espn.com/apis/site/v2/sports/...`). The scoreboard endpoint rejects date ranges, so a followed league is fetched as the union of its teams' `/teams/{id}/schedule` (deduplicated by event id). Soccer schedules need `?fixture=true` to get upcoming games; `soccer/all/teams/{id}/schedule` returns a team's games across all competitions. NBA needs `seasontype=2` or it returns preseason.
+- **Cricket:** also ESPN, but leagues are numeric ids (`8039` = ODI World Cup, `8604` = Men's T20 World Cup) and there are no team schedules. The scoreboard takes a single `?dates=YYYYMMDD`; its `leagues[0].calendar` lists the match days, so a tournament is one request for that list plus one per day not yet past. Fixtures with `timeValid: false` (placeholder time) become all-day events. A tournament counts as one fetch for the failure ratio.
 - **F1:** Jolpica (`api.jolpi.ca/ergast/f1/current.json`), the Ergast successor.
+- All requests go through one queue: sequential, 1 s apart, slow backoff on errors — the refresh isn't urgent and we don't want to get rate-limited. A full run takes ~10 minutes.
 - Events older than 7 days and postponed/canceled games are dropped.
 - If more than 20% of fetches fail (or nothing was fetched) it exits non-zero without overwriting the calendar.
 
 **`follows.json`** — what to follow (the source of truth; edit by hand):
-- `leagues` — whole leagues, by ESPN `sport` + `league` slug (e.g. `soccer`/`arg.1`)
+- `leagues` — whole leagues, by ESPN `sport` + `league` slug (e.g. `soccer`/`arg.1`; cricket uses the numeric id, e.g. `cricket`/`8039`)
 - `teams` — single teams by ESPN team id (find ids via `.../{sport}/{league}/teams`)
 - `leagueNames` — ESPN league slug → display name used in titles and for `tournaments` emoji matching
 - `f1` — include F1 sessions
@@ -36,7 +38,7 @@ Builds a `.ics` calendar from public JSON APIs — no browser, no login. (It use
 **Event title format:** `{sport emoji}{tournament emoji}{team emoji(s)} HomeTeam - AwayTeam (Tournament, Sport)`; F1: `{emoji} Formula 1 (Race name, Session)`.
 
 **`emojis.json`** — title emojis, via five maps (names must match ESPN's team names and the `leagueNames` labels):
-- `sports` — `"Football"` (soccer), `"American football"`, `"Basketball"`, `"Formula 1"` → emoji
+- `sports` — `"Football"` (soccer), `"American football"`, `"Basketball"`, `"Cricket"`, `"Formula 1"` → emoji
 - `tournaments` — tournament name or regex (e.g. `"/^.*UEFA.*$/"`) → emoji
 - `teams` — team name → emoji appended to title
 - `teamSuffixes` — team name → text suffix appended after team name

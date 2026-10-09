@@ -12,7 +12,9 @@
 		{ "sport": "soccer", "league": "uefa.nations" },
 		{ "sport": "soccer", "league": "fifa.world" },
 		{ "sport": "soccer", "league": "fifa.cwc" },
-		{ "sport": "soccer", "league": "fifa.worldq.conmebol" }
+		{ "sport": "soccer", "league": "fifa.worldq.conmebol" },
+		{ "sport": "cricket", "league": "8039" },
+		{ "sport": "cricket", "league": "8604" }
 	],
 	"teams": [
 		{ "sport": "soccer", "id": 5, "name": "Boca Juniors" },
@@ -54,6 +56,8 @@
 		"fifa.worldq.conmebol": "FIFA World Cup Qualifying - CONMEBOL",
 		"nfl": "NFL",
 		"nba": "NBA",
+		"8039": "Cricket World Cup",
+		"8604": "T20 World Cup",
 		"club.friendly": "Club Friendly Games",
 		"fifa.friendly": "International Friendly Games"
 	}

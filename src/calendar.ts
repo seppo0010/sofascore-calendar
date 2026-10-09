@@ -1,4 +1,4 @@
-// Builds the calendar from ESPN's public JSON API (soccer, NFL, NBA) and
+// Builds the calendar from ESPN's public JSON API (soccer, NFL, NBA, cricket) and
 // Jolpica (F1). No browser, no login.
 //
 //   node src/calendar.ts [out.ics]     (default: /opt/calendar/calendar.ics)
@@ -26,36 +26,33 @@ const SPORT_NAMES: Record<string, string> = {
 	soccer: 'Football',
 	football: 'American football',
 	basketball: 'Basketball',
+	cricket: 'Cricket',
 };
 const sportLabel = (name: string) => name === 'Football' ? 'Soccer' : name;
 // Keep a bit of the recent past so a game that just ended doesn't vanish.
 const SINCE = Date.now() - 7 * 24 * 60 * 60 * 1000;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
-async function getJson(url: string): Promise<any> {
-	for (let attempt = 1; ; attempt++) {
-		try {
-			const res = await fetch(url);
-			if (!res.ok) throw new Error(`HTTP ${res.status}`);
-			return await res.json();
-		} catch (error) {
-			if (attempt === 3) throw new Error(`${url}: ${error}`);
-			await sleep(1000 * 2 ** (attempt - 1));
+// The refresh is periodic, not urgent, so requests go out one at a time with
+// a pause in between (and a slow backoff on errors), to stay well clear of
+// rate limits rather than risk getting blocked.
+const REQUEST_DELAY_MS = 1000;
+let queue: Promise<unknown> = Promise.resolve();
+function getJson(url: string): Promise<any> {
+	const result = queue.then(async () => {
+		for (let attempt = 1; ; attempt++) {
+			try {
+				const res = await fetch(url);
+				if (!res.ok) throw new Error(`HTTP ${res.status}`);
+				return await res.json();
+			} catch (error) {
+				if (attempt === 3) throw new Error(`${url}: ${error}`);
+				await sleep(10_000 * attempt);
+			}
 		}
-	}
-}
-
-// Runs fn over items with at most `limit` requests in flight.
-async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> {
-	const results: R[] = new Array(items.length);
-	let next = 0;
-	await Promise.all(Array.from({ length: limit }, async () => {
-		while (next < items.length) {
-			const i = next++;
-			results[i] = await fn(items[i]);
-		}
-	}));
-	return results;
+	});
+	queue = result.catch(() => {}).then(() => sleep(REQUEST_DELAY_MS));
+	return result;
 }
 
 const events: Record<string, EventAttributes> = {};
@@ -97,9 +94,20 @@ function addEspnEvent(e: any, sport: string, fallbackLeague: string, nflMap: Rec
 			`Playoff%: ${nflMap[home].playoffPct ?? '?'}% vs ${nflMap[away].playoffPct ?? '?'}%`,
 		].join('\n');
 	}
-	const durationHours = sport === 'football' ? 3.5 : 2;
+	const title = `${prefix} ${home}${t1Suffix} - ${away}${t2Suffix} (${tournament}, ${sportLabel(sportName)}${watchabilitySuffix})`.trim();
+	// Cricket fixtures announced far ahead carry a placeholder time.
+	if (comp.timeValid === false) {
+		const day = new Date(start);
+		const ymd = (d: Date): [number, number, number] => [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate()];
+		events[`espn-${e.id}`] = { title, description, start: ymd(day), end: ymd(new Date(start + 24 * 60 * 60 * 1000)) };
+		return;
+	}
+	// An ODI takes most of a day; a T20 is about as long as an NFL game.
+	const durationHours = sport === 'football' ? 3.5
+		: sport === 'cricket' ? (comp.class?.eventType === 'T20' ? 3.5 : 8)
+		: 2;
 	events[`espn-${e.id}`] = {
-		title: `${prefix} ${home}${t1Suffix} - ${away}${t2Suffix} (${tournament}, ${sportLabel(sportName)}${watchabilitySuffix})`.trim(),
+		title,
 		description,
 		start,
 		end: start + durationHours * 60 * 60 * 1000,
@@ -115,6 +123,7 @@ async function addEspn() {
 	// the union of its teams' schedules (deduplicated by event id).
 	const schedules: { url: string; sport: string; league: string }[] = [];
 	for (const l of follows.leagues) {
+		if (l.sport === 'cricket') continue;
 		try {
 			const d = await getJson(`${ESPN}/${l.sport}/${l.league}/teams`);
 			for (const { team } of d.sports[0].leagues[0].teams) {
@@ -131,15 +140,46 @@ async function addEspn() {
 		schedules.push({ url: `${ESPN}/${t.sport}/${league}/teams/${t.id}/schedule${t.sport === 'soccer' ? '?fixture=true' : ''}`, sport: t.sport, league });
 	}
 
-	requests += follows.leagues.length + schedules.length;
-	await mapLimit(schedules, 8, async ({ url, sport, league }) => {
+	requests += follows.leagues.filter((l) => l.sport !== 'cricket').length + schedules.length;
+	for (const { url, sport, league } of schedules) {
 		try {
 			const d = await getJson(url);
 			for (const e of d.events ?? []) addEspnEvent(e, sport, league, nflMap);
 		} catch (error) {
 			failures.push(String(error));
 		}
-	});
+	}
+}
+
+// Cricket has no team schedules, and its scoreboard takes a single day, but
+// it lists the days with matches in `calendar`. So: one request for that
+// list, then one per day that isn't already past. A tournament counts as a
+// single fetch for the failure ratio, failing if any of its days does (the
+// other days are still kept).
+async function addCricket() {
+	for (const l of follows.leagues.filter((l) => l.sport === 'cricket')) {
+		requests++;
+		const url = `${ESPN}/cricket/${l.league}/scoreboard`;
+		try {
+			const d = await getJson(url);
+			const days: string[] = (d.leagues[0].calendar ?? [])
+				.filter((day: string) => Date.parse(day) + 24 * 60 * 60 * 1000 >= SINCE)
+				.map((day: string) => day.slice(0, 10).replaceAll('-', ''));
+			for (const e of d.events ?? []) addEspnEvent(e, 'cricket', l.league, {});
+			const failedDays: string[] = [];
+			for (const day of days) {
+				try {
+					const p = await getJson(`${url}?dates=${day}`);
+					for (const e of p.events ?? []) addEspnEvent(e, 'cricket', l.league, {});
+				} catch {
+					failedDays.push(day);
+				}
+			}
+			if (failedDays.length) failures.push(`cricket ${l.league}: days ${failedDays.join(', ')} failed`);
+		} catch (error) {
+			failures.push(`cricket ${l.league}: ${error}`);
+		}
+	}
 }
 
 async function addF1() {
@@ -176,7 +216,7 @@ async function addF1() {
 	}
 }
 
-await Promise.all([addEspn(), follows.f1 ? addF1() : Promise.resolve()]);
+await Promise.all([addEspn(), addCricket(), follows.f1 ? addF1() : Promise.resolve()]);
 
 if (failures.length) console.error(`${failures.length}/${requests} fetches failed:\n  ${failures.join('\n  ')}`);
 // A partial outage would silently drop whole teams or leagues from the
