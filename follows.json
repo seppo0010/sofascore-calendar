@@ -1,0 +1,51 @@
+{
+	"f1": true,
+	"leagues": [
+		{ "sport": "football", "league": "nfl" },
+		{ "sport": "basketball", "league": "nba", "query": "seasontype=2" },
+		{ "sport": "soccer", "league": "arg.1" },
+		{ "sport": "soccer", "league": "uefa.champions" },
+		{ "sport": "soccer", "league": "uefa.europa" },
+		{ "sport": "soccer", "league": "conmebol.libertadores" },
+		{ "sport": "soccer", "league": "conmebol.sudamericana" },
+		{ "sport": "soccer", "league": "uefa.nations" }
+	],
+	"teams": [
+		{ "sport": "soccer", "id": 5, "name": "Boca Juniors" },
+		{ "sport": "soccer", "id": 16, "name": "River Plate" },
+		{ "sport": "soccer", "id": 3, "name": "Argentinos Juniors" },
+		{ "sport": "soccer", "id": 20232, "name": "Inter Miami CF" },
+		{ "sport": "soccer", "id": 202, "name": "Argentina" },
+		{ "sport": "soccer", "id": 86, "name": "Real Madrid" },
+		{ "sport": "soccer", "id": 83, "name": "Barcelona" },
+		{ "sport": "soccer", "id": 1068, "name": "Atlético Madrid" },
+		{ "sport": "soccer", "id": 110, "name": "Internazionale" },
+		{ "sport": "soccer", "id": 364, "name": "Liverpool" },
+		{ "sport": "soccer", "id": 382, "name": "Manchester City" },
+		{ "sport": "soccer", "id": 363, "name": "Chelsea" },
+		{ "sport": "soccer", "id": 362, "name": "Aston Villa" },
+		{ "sport": "soccer", "id": 885, "name": "Universidad Católica" },
+		{ "sport": "soccer", "id": 359, "name": "Arsenal" },
+		{ "sport": "soccer", "id": 360, "name": "Manchester United" },
+		{ "sport": "soccer", "id": 19195, "name": "Deportes Limache" }
+	],
+	"leagueNames": {
+		"arg.1": "Liga Profesional",
+		"arg.copa": "Copa Argentina",
+		"eng.1": "Premier League",
+		"esp.1": "LaLiga",
+		"ita.1": "Serie A",
+		"usa.1": "MLS",
+		"chi.1": "Liga de Primera",
+		"eng.league_cup": "EFL Cup",
+		"uefa.champions": "UEFA Champions League",
+		"uefa.europa": "UEFA Europa League",
+		"uefa.nations": "UEFA Nations League",
+		"conmebol.libertadores": "CONMEBOL Libertadores",
+		"conmebol.sudamericana": "CONMEBOL Sudamericana",
+		"nfl": "NFL",
+		"nba": "NBA",
+		"club.friendly": "Club Friendly Games",
+		"fifa.friendly": "International Friendly Games"
+	}
+}

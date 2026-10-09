@@ -1,5 +1,3 @@
-import type { BrowserContext } from '@playwright/test';
-
 export type TeamStats = {
 	fpi: number;
 	playoffPct?: number;
@@ -20,15 +18,21 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 const RETRY_ATTEMPTS = 3;
 const RETRY_BASE_DELAY_MS = 1000;
 
-export async function fetchNflWatchabilityMap(context: BrowserContext): Promise<Record<string, TeamStats>> {
-	for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt++) {
-		const page = await context.newPage();
-		try {
-			await page.goto('https://www.espn.com/nfl/fpi', { waitUntil: 'domcontentloaded', timeout: 30000 });
-			const fpiRows = await page.evaluate(() => (window as any).__espnfitt__.page.content.table.stats) as EspnStatRow[];
+// The FPI tables are embedded as JSON in the server-rendered page, so no
+// browser is needed.
+async function fetchStatsTable(url: string): Promise<EspnStatRow[]> {
+	const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0' } });
+	if (!res.ok) throw new Error(`${url}: HTTP ${res.status}`);
+	const json = (await res.text()).match(/window\['__espnfitt__'\]=(\{.*?\});<\/script>/s)?.[1];
+	if (!json) throw new Error(`${url}: no __espnfitt__ data`);
+	return JSON.parse(json).page.content.table.stats;
+}
 
-			await page.goto('https://www.espn.com/nfl/fpi/_/view/projections', { waitUntil: 'domcontentloaded', timeout: 30000 });
-			const projRows = await page.evaluate(() => (window as any).__espnfitt__.page.content.table.stats) as EspnStatRow[];
+export async function fetchNflWatchabilityMap(): Promise<Record<string, TeamStats>> {
+	for (let attempt = 1; attempt <= RETRY_ATTEMPTS; attempt++) {
+		try {
+			const fpiRows = await fetchStatsTable('https://www.espn.com/nfl/fpi');
+			const projRows = await fetchStatsTable('https://www.espn.com/nfl/fpi/_/view/projections');
 
 			const map: Record<string, TeamStats> = {};
 			for (const row of fpiRows) {
@@ -47,8 +51,6 @@ export async function fetchNflWatchabilityMap(context: BrowserContext): Promise<
 			}
 			console.error(`Failed to fetch NFL FPI/playoff data from ESPN (attempt ${attempt}/${RETRY_ATTEMPTS}), retrying`, { error });
 			await sleep(RETRY_BASE_DELAY_MS * 2 ** (attempt - 1));
-		} finally {
-			await page.close();
 		}
 	}
 	return {};
