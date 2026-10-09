@@ -3,9 +3,7 @@
 //
 //   node src/calendar.ts [out.ics]     (default: /opt/calendar/calendar.ics)
 //
-// What to follow lives in follows.json; emoji maps come from SPECIAL_EVENTS
-// in .env.
-import 'dotenv/config';
+// What to follow lives in follows.json; title emojis in emojis.json.
 import { readFileSync, writeFileSync } from 'fs';
 import { createEvents, type EventAttributes } from 'ics';
 import { computeWatchability, fetchNflWatchabilityMap, type TeamStats } from './nfl-fpi.ts';
@@ -19,12 +17,11 @@ const follows: {
 	leagueNames: Record<string, string>;
 } = JSON.parse(readFileSync(new URL('../follows.json', import.meta.url), 'utf8'));
 
-const { teams, tournaments, stage, sports, teamSuffixes } = process.env.SPECIAL_EVENTS === undefined ? {
-	teams: {}, tournaments: {}, stage: {}, sports: {}, teamSuffixes: {},
-} : JSON.parse(process.env.SPECIAL_EVENTS);
+const { teams, tournaments, stage, sports, teamSuffixes }: Record<'teams' | 'tournaments' | 'stage' | 'sports' | 'teamSuffixes', Record<string, string>> =
+	JSON.parse(readFileSync(new URL('../emojis.json', import.meta.url), 'utf8'));
 
 const ESPN = 'https://site.api.espn.com/apis/site/v2/sports';
-// SPECIAL_EVENTS.sports is keyed by these names.
+// emojis.json's "sports" is keyed by these names.
 const SPORT_NAMES: Record<string, string> = {
 	soccer: 'Football',
 	football: 'American football',

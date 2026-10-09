@@ -1,0 +1,34 @@
+{
+	"sports": {
+		"Formula 1": "🏎️",
+		"American football": "🏈",
+		"Football": "⚽",
+		"Cricket": "🏏",
+		"Basketball": "🏀"
+	},
+	"tournaments": {
+		"Copa Argentina": "🏆🇦🇷",
+		"/^.*UEFA.*$/": "🇪🇺",
+		"/^.*World Cup.*$/": "🌐",
+		"Club Friendly Games": "🆓",
+		"International Friendly Games": "🆓",
+		"Liga Profesional": "🇦🇷",
+		"LaLiga": "🇪🇸",
+		"Premier League": "🏴󠁧󠁢󠁥󠁮󠁧󠁿",
+		"Serie A": "🇮🇹"
+	},
+	"teams": {
+		"Inter Miami CF": "🐐",
+		"Boca Juniors": "🇸🇪",
+		"River Plate": "🐔",
+		"Argentinos Juniors": "🐞",
+		"Argentina": "🇦🇷"
+	},
+	"teamSuffixes": {},
+	"stage": {
+		"Qualifying": "⏱️",
+		"Sprint Qualifying": "⏱️",
+		"Grand Prix": "🏁",
+		"Sprint": "🏁"
+	}
+}

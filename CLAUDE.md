@@ -35,9 +35,7 @@ Builds a `.ics` calendar from public JSON APIs — no browser, no login. (It use
 
 **Event title format:** `{sport emoji}{tournament emoji}{team emoji(s)} HomeTeam - AwayTeam (Tournament, Sport)`; F1: `{emoji} Formula 1 (Race name, Session)`.
 
-**Configuration: `.env` → `SPECIAL_EVENTS` JSON**
-
-Emoji prefixes via five maps (names must match ESPN's team names and the `leagueNames` labels):
+**`emojis.json`** — title emojis, via five maps (names must match ESPN's team names and the `leagueNames` labels):
 - `sports` — `"Football"` (soccer), `"American football"`, `"Basketball"`, `"Formula 1"` → emoji
 - `tournaments` — tournament name or regex (e.g. `"/^.*UEFA.*$/"`) → emoji
 - `teams` — team name → emoji appended to title
