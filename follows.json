@@ -4,11 +4,15 @@
 		{ "sport": "football", "league": "nfl" },
 		{ "sport": "basketball", "league": "nba", "query": "seasontype=2" },
 		{ "sport": "soccer", "league": "arg.1" },
+		{ "sport": "soccer", "league": "arg.copa" },
 		{ "sport": "soccer", "league": "uefa.champions" },
 		{ "sport": "soccer", "league": "uefa.europa" },
 		{ "sport": "soccer", "league": "conmebol.libertadores" },
 		{ "sport": "soccer", "league": "conmebol.sudamericana" },
-		{ "sport": "soccer", "league": "uefa.nations" }
+		{ "sport": "soccer", "league": "uefa.nations" },
+		{ "sport": "soccer", "league": "fifa.world" },
+		{ "sport": "soccer", "league": "fifa.cwc" },
+		{ "sport": "soccer", "league": "fifa.worldq.conmebol" }
 	],
 	"teams": [
 		{ "sport": "soccer", "id": 5, "name": "Boca Juniors" },
@@ -27,7 +31,9 @@
 		{ "sport": "soccer", "id": 885, "name": "Universidad Católica" },
 		{ "sport": "soccer", "id": 359, "name": "Arsenal" },
 		{ "sport": "soccer", "id": 360, "name": "Manchester United" },
-		{ "sport": "soccer", "id": 19195, "name": "Deportes Limache" }
+		{ "sport": "soccer", "id": 19195, "name": "Deportes Limache" },
+		{ "sport": "soccer", "id": 101, "name": "Rayo Vallecano" },
+		{ "sport": "soccer", "id": 4132, "name": "Unión Española" }
 	],
 	"leagueNames": {
 		"arg.1": "Liga Profesional",
@@ -43,6 +49,9 @@
 		"uefa.nations": "UEFA Nations League",
 		"conmebol.libertadores": "CONMEBOL Libertadores",
 		"conmebol.sudamericana": "CONMEBOL Sudamericana",
+		"fifa.world": "FIFA World Cup",
+		"fifa.cwc": "FIFA Club World Cup",
+		"fifa.worldq.conmebol": "FIFA World Cup Qualifying - CONMEBOL",
 		"nfl": "NFL",
 		"nba": "NBA",
 		"club.friendly": "Club Friendly Games",
